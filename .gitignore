@@ -1,0 +1,5 @@
+temp/
+chromedriver.exe
+reviews.csv
+debug.log
+.ipynb_checkpoints/
