@@ -1,5 +1,4 @@
 temp/
-chromedriver.exe
-reviews.csv
-debug.log
+chromedriver/
+ffmpeg/
 .ipynb_checkpoints/

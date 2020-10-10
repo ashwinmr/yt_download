@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import os.path
 import sys
 import argparse
@@ -6,14 +7,16 @@ import requests
 from bs4 import BeautifulSoup
 from selenium.webdriver import Chrome
 import time
+import youtube_dl
 
 def parse_args():
   """ Parse arguments for program
   """
   parser = argparse.ArgumentParser(description="Program for downloading youtube playlist")
   parser.add_argument('url', help='Url for youtube playlist')
-  parser.add_argument('-s','--save_file', default='temp/links.csv', help='File to save video links')
-  parser.add_argument('-d','--web_driver_path', default='chromedriver.exe', help='Path to chrome web driver')
+  parser.add_argument('-d','--output_dir', default='temp', help='Path to output directory')
+  parser.add_argument('-w','--web_driver_path', default='chromedriver/chromedriver.exe', help='Path to chrome web driver')
+  parser.add_argument('-c','--ffmpeg_dir', default='ffmpeg/', help='Path to ffmpeg directory for converting audio')
 
   return parser.parse_args()
 
@@ -79,23 +82,56 @@ def get_video_links(html):
         video_title = playlist_item.find('span',id='video-title')['title']
         video_titles.append(video_title)
 
+    # Print list
+    print('\nLinks:')
+    res = '\n'.join("{} \t {}".format(x, y) for x, y in zip(video_titles, video_links))
+    print(res)
+
     return video_links, video_titles
+
+def download_audio(url,output_dir,ffmpeg_dir):
+    """ Download audio file from youtube url
+    """
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'ffmpeg_location': ffmpeg_dir,
+        'outtmpl': output_dir + '/%(title)s.%(ext)s',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+            }],
+            }
+
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
 
 if __name__ == "__main__":
     args = parse_args()
 
     url = args.url
-    save_file = args.save_file
+    web_driver_path = args.web_driver_path
+    ffmpeg_dir = args.ffmpeg_dir
+    output_dir = args.output_dir
 
     # Check for webdriver
-    if not os.path.exists(args.web_driver_path):
-        print('Please downlaod the crome driver from https://chromedriver.chromium.org/ and place chromedriver.exe in the current folder')
+    if not os.path.exists(web_driver_path):
+        print('Please download the crome driver from https://chromedriver.chromium.org/downloads and place chromedriver.exe in the chromedriver folder')
         sys.exit()
 
-    html = get_html_with_js(url, args.web_driver_path)
+    # Check for ffmpeg
+    ffmpeg_path = os.path.join(ffmpeg_dir,'ffmpeg.exe')
+    if not os.path.exists(ffmpeg_path):
+        print('Please download ffmpeg from https://ffmpeg.org/download.html and place ffmpeg.exe in the ffmpeg folder')
+        sys.exit()
 
+    html = get_html_with_js(url,web_driver_path)
     video_links, video_titles = get_video_links(html)
 
-    # Save to csv
-    df = pd.DataFrame({'title' : video_titles, 'links' : video_links})
-    df.to_csv(save_file, index=False)
+    # Check if output dir exists
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    print('\nDownloading:')
+    for video_link in video_links:
+        download_audio(video_link,output_dir = output_dir, ffmpeg_dir = ffmpeg_dir)
