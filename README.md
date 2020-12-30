@@ -25,6 +25,8 @@ The following flags are supported:
 - -d : Output directory (default is temp/)
 - -w : Path to webdriver used for scraping
 - -c : Path to ffmpeg directory
+- -s : Start number (default 1)
+- -e : End number (default end)
 
 ## Examples
 Example 1: Pop playlist

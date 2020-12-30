@@ -17,6 +17,8 @@ def parse_args():
   parser.add_argument('-d','--output_dir', default='temp', help='Path to output directory')
   parser.add_argument('-w','--web_driver_path', default='chromedriver/chromedriver.exe', help='Path to chrome web driver')
   parser.add_argument('-c','--ffmpeg_dir', default='ffmpeg/', help='Path to ffmpeg directory for converting audio')
+  parser.add_argument('-s','--start', type=int, default=1, help='Starting song number in playlist')
+  parser.add_argument('-e','--end', type=int, help='Ending song number in playlist')
 
   return parser.parse_args()
 
@@ -113,6 +115,8 @@ if __name__ == "__main__":
     web_driver_path = args.web_driver_path
     ffmpeg_dir = args.ffmpeg_dir
     output_dir = args.output_dir
+    start = args.start
+    end = args.end
 
     # Check for webdriver
     if not os.path.exists(web_driver_path):
@@ -131,6 +135,14 @@ if __name__ == "__main__":
     # Check if output dir exists
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+
+    # Get subset of songs
+    if start < 1:
+        start = 1
+    if end is None or end > len(video_links):
+        end = len(video_links)
+    video_links = video_links[start-1:end]
+    video_titles = video_titles[start-1:end]
 
     print('\nDownloading:')
     for video_link in video_links:
