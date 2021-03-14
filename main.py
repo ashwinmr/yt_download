@@ -81,7 +81,7 @@ def get_video_links(html):
         video_links.append(video_link)
 
         # Get video title
-        video_title = playlist_item.find('span',id='video-title')['title']
+        video_title = playlist_item.find('a').get('title')
         video_titles.append(video_title)
 
     # Print list
@@ -145,5 +145,8 @@ if __name__ == "__main__":
     video_titles = video_titles[start-1:end]
 
     print('\nDownloading:')
-    for video_link in video_links:
-        download_audio(video_link,output_dir = output_dir, ffmpeg_dir = ffmpeg_dir)
+    for video_link, video_title in zip(video_links,video_titles):
+        try:
+            download_audio(video_link,output_dir = output_dir, ffmpeg_dir = ffmpeg_dir)
+        except:
+            print('\tWarning: Unable to download {video_title}'.format(video_title=video_title))
